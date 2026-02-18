@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WPM-Words Triplet Embeddings UK - Young </title>  <!-- CHANGE THIS (title) -->
+    <title>WPM-Words Triplet Embeddings US - Older Adults</title>
       
     <script src="https://unpkg.com/jspsych@7.2.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
@@ -25,44 +25,119 @@
     
   <script>
 
+    // =====================================================================
+    // EXPERIMENT CONFIG
+    // Edit these values to customize the experiment for a new study.
+    //
+    // SENSITIVE VALUES (DataPipe experiment ID, Prolific completion code)
+    // are stored in secret_config.json — edit that file instead.
+    // They are fetched at runtime so they do not appear in this HTML source.
+    // =====================================================================
+    const CONFIG = {
+
+      // --- DataPipe / OSF ---
+      // datapipeExperimentId  →  set in secret_config.json
+      filePrefix: "triplets_wpm-words_us_older_", // prefix for saved data files
+
+      // --- Prolific ---
+      // prolificCompletionCode  →  set in secret_config.json
+
+      // --- Preloading ---
+      maxLoadTime: 120000,                         // ms before preload times out (2 min)
+
+      // --- Consent ---
+      consentImage: "kc_lab_consent_prolific.png", // path to consent form image
+
+      // --- Trial counts (per block, before repetitions) ---
+      socialTrialsPerBlock: 40,
+      nonsocialTrialsPerBlock: 40,
+      socialValidationTrialsPerBlock: 10,
+      nonsocialValidationTrialsPerBlock: 10,
+      attentionCheckTrialsPerBlock: 1,
+
+      // --- Repetitions ---
+      repetitions: 5,
+
+      // --- Speed thresholds (ms) ---
+      speedThreshold: 900,                         // regular trials
+      validationSpeedThreshold: 9000,              // validation trials
+
+      // --- Text / Instructions (edit here to change what participants see) ---
+      trialPrompt: "Select the item closest to the item on top",
+
+      instructionsHtml:
+        "<p>In each trial of this task, you will see three images: one target item on top, " +
+        "and two choices beneath the target item.</p>" +
+        "<p>For each trial, <strong>please select the item that is most like the target item.</strong></p>" +
+        "<p>There may be trials with no obvious answer. In those cases, use your best judgement.</p>" +
+        "<p>There will be 2 rounds of this task with around 250 trials per round. " +
+        "You will have the opportunity to take a break midway.</p>" +
+        "<p>Click 'Continue' to begin the test.</p>",
+
+      breakHtml:
+        "Nice job! Feel free to take a quick break, then click 'Continue' when you are ready to proceed to the next round." +
+        "<p>Remember, your task is to <strong>select the item closest to the item on top.</strong></p>",
+
+    };
+    // =====================================================================
+
+
+    // Fetch sensitive config values from secret_config.json (not visible in HTML source),
+    // then initialize and run the experiment.
+    (async function () {
+
+        try {
+            const response = await fetch('secret_config.json');
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const secret = await response.json();
+            Object.assign(CONFIG, secret);
+        } catch (e) {
+            document.body.innerHTML =
+                '<p style="font-family:sans-serif;text-align:center;margin-top:40px">' +
+                'Error loading experiment configuration. Please contact the researcher.</p>';
+            console.error('Failed to load secret_config.json:', e);
+            return;
+        }
+
+
+    // === SETUP: jsPsych, Worker ID, Filename ===
+
     var jsPsych = initJsPsych({
         show_progress_bar:false,
         on_data_update: function(){
             jsPsych.data.addProperties({worker_id: urlvar.workerId});
-            //saveData(file, jsPsych.data.get().csv());
-            timeline.push(save_data);
         },
         on_finish: function(){
             jsPsych.data.addProperties({worker_id: urlvar.workerId});
-            //saveData(file, jsPsych.data.get().csv());
-            timeline.push(save_data);
-
         },
-        max_load_time: 120000
+        max_load_time: CONFIG.maxLoadTime
     });
 
 
     
-  // generating a user id and file name  
-  var secret_code  = jsPsych.randomization.randomID(8);
-  var file_name = "triplets_wpm-words_uk_young_" + secret_code; // CHANGE THIS (file name)
+    // === DATA SAVING: DataPipe ===
 
-    // this is to save to OSF using DataPipe
-      const save_data = {
+    // generating a user id and file name
+    var secret_code = jsPsych.randomization.randomID(8);
+    var file_name = CONFIG.filePrefix + secret_code;
+
+    const save_data = {
         type: jsPsychPipe,
         action: "save",
-        experiment_id: "2IwoRUf8HArf",
+        experiment_id: CONFIG.datapipeExperimentId,
         filename: file_name,
         data_string: ()=>jsPsych.data.get().csv()
-      };
+    };
 
-          /* create timeline */
+    /* create timeline */
     var timeline = [];
-      
-    // pulling info re: mechanical turk hit
-      var urlvar = jsPsych.data.urlVariables();  
-      
-    
+
+    // pulling info re: Prolific / MTurk worker ID
+    var urlvar = jsPsych.data.urlVariables();
+
+
+    // === PRELOAD ===
+
     var preload = {
         type: jsPsychPreload,
         auto_preload: true,
@@ -430,9 +505,11 @@
         error_message: "Oops! There's a problem loading files. Please refresh the page to try again."
     }  
     timeline.push(preload);
-    
-      
-        var stimuli_social = [
+
+
+    // === SOCIAL STIMULI (Timeline Variables) ===
+
+    var stimuli_social = [
                 {item: 'resources/adolescent.png'},
                 {item: 'resources/adult.png'},
                 {item: 'resources/aunt.png'},
@@ -612,8 +689,11 @@
                 {item: 'resources/woman.png'},
                 {item: 'resources/youth.png'}
             ]
-        
-        var stimuli_nonsocial = [ 
+
+
+    // === NONSOCIAL STIMULI (Timeline Variables) ===
+
+    var stimuli_nonsocial = [
             {item: 'resources/Axe.png'},
             {item: 'resources/Beret.png'},
             {item: 'resources/Brush.png'},
@@ -795,11 +875,11 @@
             {item: 'resources/Trumpet.png'},
             {item: 'resources/Wellies.png'}
                 ]
-        
 
 
+    // === SOCIAL STIMULI ARRAY (full pool for random sampling) ===
 
-      var social_arr = [ 
+    var social_arr = [
             'resources/adolescent.png',
             'resources/adult.png',
             'resources/aunt.png',
@@ -979,8 +1059,11 @@
             'resources/woman.png',
             'resources/youth.png'
       ];
-      
-      var nonsocial_arr = [
+
+
+    // === NONSOCIAL STIMULI ARRAY (full pool for random sampling) ===
+
+    var nonsocial_arr = [
             'resources/Axe.png',
             'resources/Beret.png',
             'resources/Brush.png',
@@ -1165,9 +1248,8 @@
 
 
       
-      //plan: 
-      //1) make a pool of random triplets
-      //2) sample
+    // === VALIDATION TRIPLETS: SOCIAL ===
+
     var validation_social = [
             {head: 'resources/woman_33.png',	choice_1: 'resources/groom.png',	choice_2: 'resources/girl_21.png'},
             {head: 'resources/woman_3.png',	choice_1: 'resources/man_12.png',	choice_2: 'resources/boy_11.png'},
@@ -1370,8 +1452,10 @@
             {head: 'resources/woman_19.png',	choice_1: 'resources/girl_7.png',	choice_2: 'resources/man_14.png'},
             {head: 'resources/baby.png',	choice_1: 'resources/girl_24.png',	choice_2: 'resources/woman_19.png'}]
 
-      
-    var validation_nonsocial = [ // CHANGE THIS (validation list #2; optional)
+
+    // === VALIDATION TRIPLETS: NONSOCIAL ===
+
+    var validation_nonsocial = [
             {head: 'resources/object_75.png',	choice_1: 'resources/object_30.png',	choice_2: 'resources/object_18.png'},
             {head: 'resources/object_107.png',	choice_1: 'resources/object_63.png',	choice_2: 'resources/object_120.png'},
             {head: 'resources/object_42.png',	choice_1: 'resources/object_67.png',	choice_2: 'resources/object_128.png'},
@@ -1574,7 +1658,9 @@
             {head: 'resources/object_49.png',	choice_1: 'resources/Spanner.png',	choice_2: 'resources/building_5.png'}]
     
           
-    var check_nonsocial = [ // CHANGE THIS (attention check trials)
+    // === ATTENTION CHECK TRIPLETS ===
+
+    var check_nonsocial = [
             {head: "resources/object_24.png", choice_1: "resources/object_24.png", choice_2: "resources/object_34.png", correct_choice: 0},
             {head: "resources/object_3.png", choice_1: "resources/object_3.png", choice_2: "resources/object_4.png", correct_choice: 0},
             {head: "resources/object_6.png", choice_1: "resources/object_23.png", choice_2: "resources/object_6.png", correct_choice: 1},
@@ -1582,7 +1668,7 @@
             {head: "resources/building_13.png", choice_1: "resources/building_6.png", choice_2: "resources/building_13.png", correct_choice: 1}
       ]
       
-    var check_social = [  // CHANGE THIS (attention check trials #2; optional)
+    var check_social = [
            {head: "resources/boy_1.png", choice_1: "resources/boy_2.png", choice_2: "resources/boy_1.png", correct_choice: 1},
            {head: "resources/girl_2.png", choice_1: "resources/girl_2.png", choice_2: "resources/girl_1.png", correct_choice: 0},
            {head: "resources/man_1.png", choice_1: "resources/man_2.png", choice_2: "resources/man_1.png", correct_choice: 1},
@@ -1590,7 +1676,9 @@
            {head: "resources/baby_1.png", choice_1: "resources/baby_2.png", choice_2: "resources/baby_1.png", correct_choice: 1}
       ]
       
-   //to shuffle the array of button choices at the beginning of the experiment   
+    // === UTILITY FUNCTIONS ===
+
+    // shuffle an array in place
     function shuffle(array) {
         let currentIndex = array.length,  randomIndex;
         // While there remain elements to shuffle.
@@ -1616,7 +1704,8 @@
     }
       
       
-    /* define welcome message trial */
+    // === INSTRUCTIONS & CONSENT ===
+
     var welcome = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: "Welcome to the experiment. Press any key to begin."
@@ -1632,7 +1721,7 @@
     /* define consent trail */
     var consent = {
         type: jsPsychImageButtonResponse,
-        stimulus: "kc_lab_consent_prolific.png", // CHANGE THIS (to Mturk/Prolific or SONA depending on your sample)
+        stimulus: CONFIG.consentImage,
         choices: ["Consent & Continue"]
     };
     timeline.push(consent);
@@ -1641,12 +1730,8 @@
           
     /* define testing instructions */
     var instructions = {
-      type: jsPsychHtmlButtonResponse, // CHANGE THIS (instructions)
-      stimulus: "<p>In each trial of this task, you will see three images: one target item on top, and two choices beneath the target item." +
-        "</p><p>For each trial, <strong>please select the item that is most like the target item.</strong>"+
-        "<p>There may be trials with no obvious answer. In those cases, use your best judgement." +
-        "<p>There will be 2 rounds of this task with around 250 trials per round. You will have the opportunity to take a break midway. </p>"+
-          "<p>Click 'Continue' to begin the test.</p>",
+      type: jsPsychHtmlButtonResponse,
+      stimulus: CONFIG.instructionsHtml,
         choices: ["Continue"],
         post_trial_gap: 2000,
         on_finish: function(){
@@ -1668,9 +1753,9 @@
       
       var arr_pair = [];
 
-// define the trials!
-      
-      var trial_social = {
+    // === TRIAL DEFINITIONS ===
+
+    var trial_social = {
           type: jsPsychImageButtonResponse,
             stimulus: jsPsych.timelineVariable('item'),    // IF YOU CHANGED THE OBJECT NAMES IN YOUR ARRAY ABOVE, CHANGE THEM HERE TO MATCH     
             choices: function(){
@@ -1689,12 +1774,13 @@
                 n = 1;
                 var data_last1 = jsPsych.data.get().last(n);
                 lasttrialdata_rt = data_last1.select('rt').mean();
-                if (lasttrialdata_rt < 900){
+                if (lasttrialdata_rt < CONFIG.speedThreshold){
                       data.speedy = true;
                     } else {
                       data.speedy = false; 
                 }
                 data.validation = false;
+                data.domain = "social";
             }
       };
       
@@ -1717,12 +1803,13 @@
                 n = 1;
                 var data_last1 = jsPsych.data.get().last(n);
                 lasttrialdata_rt = data_last1.select('rt').mean();
-                if (lasttrialdata_rt < 900){
+                if (lasttrialdata_rt < CONFIG.speedThreshold){
                       data.speedy = true;
                     } else {
                       data.speedy = false; 
                 }
                 data.validation = false;
+                data.domain = "nonsocial";
             }
       };
       
@@ -1744,12 +1831,13 @@
               n = 1;
                 var data_last = jsPsych.data.get().last(n);
                 lasttrialdata_rt = data_last.select('rt').mean();
-                if (lasttrialdata_rt < 1000){
+                if (lasttrialdata_rt < CONFIG.validationSpeedThreshold){
                       data.speedy = true;
                     } else {
                       data.speedy = false; 
                 }
               data.validation = true;
+              data.domain = "social";
           }
       };
       
@@ -1770,12 +1858,13 @@
               n = 1;
                 var data_last = jsPsych.data.get().last(n);
                 lasttrialdata_rt = data_last.select('rt').mean();
-                if (lasttrialdata_rt < 1000){
+                if (lasttrialdata_rt < CONFIG.validationSpeedThreshold){
                       data.speedy = true;
                     } else {
                       data.speedy = false; 
                 }
               data.validation = true;
+              data.domain = "nonsocial";
           }
       };
       
@@ -1841,7 +1930,8 @@
         }
     
        
-    // okay so this is to get a random set of elements...  
+    // === BLOCK CONSTRUCTION ===
+
     function getRandom(arr, n) {
         var result = new Array(n),
             len = arr.length,
@@ -1860,21 +1950,21 @@
 var validation_procedure_social = {
     timeline: [fixation, validation_trial_social, if_node_speed],
     timeline_variables: validation_social,
-    prompt: "Select the item closest to the item on top",
+    prompt: CONFIG.trialPrompt,
     sample :{
         type: 'without-replacement',
-        size: 10 // CHANGE THIS if you want a different number of validation trials per block
+        size: CONFIG.socialValidationTrialsPerBlock
     }
 };
       
 var trial_procedure_social = {
     timeline: [fixation, trial_social, if_node_speed],
     timeline_variables: stimuli_social,
-    prompt: "Select the item closest to the item on top",
+    prompt: CONFIG.trialPrompt,
     randomize_order: true,
     sample: {
         type: 'with-replacement',
-        size: 40 // CHANGE THIS if you want a different number of regular trials per block
+        size: CONFIG.socialTrialsPerBlock
     }
 };
           
@@ -1882,10 +1972,10 @@ var trial_procedure_social = {
 var check_social = {
     timeline: [fixation, check_trial, if_node_check],
     timeline_variables: check_social,
-    prompt: "Select the item closest to the item on top",
+    prompt: CONFIG.trialPrompt,
     sample: {
         type: 'without-replacement',
-        size: 1 // CHANGE THIS if you want a different number of check trials per block
+        size: CONFIG.attentionCheckTrialsPerBlock
     }
 };
       
@@ -1895,7 +1985,7 @@ var check_social = {
 var social_procedure = {
     timeline: [trial_procedure_social, check_social, validation_procedure_social],
     randomize_order: true,
-    repetitions: 5
+    repetitions: CONFIG.repetitions
 };
       
       
@@ -1904,9 +1994,8 @@ var social_procedure = {
       
     var quick_break = {
       type: jsPsychHtmlButtonResponse,
-      stimulus: "Nice job! Feel free to take a quick break, then click 'Continue' when you are ready proceed to the next round." +
-        "<p>Remember, your task is to <strong>select the item closest to the item on top.</strong>",
-        choices: ["Continue"]
+      stimulus: CONFIG.breakHtml,
+      choices: ["Continue"]
     };
       
 
@@ -1914,47 +2003,49 @@ var social_procedure = {
 var validation_procedure_nonsocial = {
     timeline: [fixation, validation_trial_nonsocial, if_node_speed],
     timeline_variables: validation_nonsocial,
-    prompt: "Select the item closest to the item on top",
+    prompt: CONFIG.trialPrompt,
     randomize_order: true,
     sample: {
         type: 'without-replacement',
-        size: 10
+        size: CONFIG.nonsocialValidationTrialsPerBlock
     }
 };
-      
+
 var trial_procedure_nonsocial = {
     timeline: [fixation, trial_nonsocial, if_node_speed],
     timeline_variables: stimuli_nonsocial,
-    prompt: "Select the item closest to the item on top",    
+    prompt: CONFIG.trialPrompt,
     randomize_order: true,
     sample: {
         type: 'with-replacement',
-        size: 40
+        size: CONFIG.nonsocialTrialsPerBlock
     }
 };
-      
+
 var check_nonsocial = {
     timeline: [fixation, check_trial, if_node_check],
     timeline_variables: check_nonsocial,
-    prompt: "Select the item closest to the item on top",    
+    prompt: CONFIG.trialPrompt,
     sample: {
         type: 'without-replacement',
-        size: 1
+        size: CONFIG.attentionCheckTrialsPerBlock
     }
 };
-     
-      
+
 var nonsocial_procedure = {
     timeline: [trial_procedure_nonsocial, check_nonsocial, validation_procedure_nonsocial],
     randomize_order: true,
-    repetitions: 5
+    repetitions: CONFIG.repetitions
 };
       
 // *** END OF OPTIONAL CODE *** //
 
 
       
-var condition_setting = jsPsych.randomization.repeat([social_procedure, nonsocial_procedure], 1);// randomizing conditions (ordering of social or nonsocial)
+    // === TIMELINE ASSEMBLY ===
+
+    // randomize block order (social vs nonsocial)
+    var condition_setting = jsPsych.randomization.repeat([social_procedure, nonsocial_procedure], 1);
 var condition = [condition_setting[0], quick_break, condition_setting[1]]
       
       
@@ -1966,7 +2057,9 @@ timeline.push(condition_procedure);
     
                
     
-var demographic_instructions = {
+    // === DEMOGRAPHICS ===
+
+    var demographic_instructions = {
       type: jsPsychHtmlButtonResponse,
       stimulus: "<p>Thank you.<p>For this last part of the experiment, please provide us with information about yourself.</p> ",
       choices: ["Continue"],
@@ -2006,35 +2099,22 @@ var demographics = {
       
       
       
-   var goodbye = {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: function(){
-        output = "Great job! You have finished the experiment. <br> <strong> Here is your secret code: CZEQ6EOV </strong><br> Goodbye!<br><br>";
-      return output;
-      },
-      choices: ["<a href='https://app.prolific.com/submissions/complete?cc=CZEQ6EOV'>Complete Experiment</a>"]    
-   };
+    var goodbye = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: function(){
+            return `Great job! You have finished the experiment. <br> <strong> Here is your secret code: ${CONFIG.prolificCompletionCode} </strong><br> Goodbye!<br><br>`;
+        },
+        choices: [`<a href='https://app.prolific.com/submissions/complete?cc=${CONFIG.prolificCompletionCode}'>Complete Experiment</a>`]
+    };
     
     timeline.push(save_data);
     timeline.push(goodbye);
 
-      
-//     // this is to save to normal server
-//    function saveData(name, data){
-//      var xhr = new XMLHttpRequest();
-//      xhr.open('POST', 'data_write.php'); // 'write_data.php' is the path to the php file described above.
-//      xhr.setRequestHeader('Content-Type', 'application/json');
-//      xhr.send(JSON.stringify({filename: name, filedata: data}));
-//    }
-    
 
-      
     jsPsych.run(timeline);
+
+    })(); // end async IIFE
 
 
   </script>
-  </html>
-
-<!--
-
--->
+</html>
